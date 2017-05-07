@@ -6,16 +6,13 @@ extern crate rocket;
 #[cfg(test)] mod tests;
 
 extern crate serde_json;
-#[macro_use] extern crate rocket_contrib;
 // #[macro_use]
 // extern crate serde_derive;
 
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use rocket_contrib::{JSON, Value};
 use rocket::State;
 
 extern crate hyper;
@@ -40,8 +37,8 @@ use iso_country::Country;
 struct Store(Arc<Mutex<Option<String>>>);
 
 #[get("/")]
-fn index(store: State<Store>) -> Result<String, json::Error> {
-    Ok(
+fn index(store: State<Store>) -> rocket::response::content::JSON<String> {
+    rocket::response::content::JSON(
         store.inner().0
             .lock().unwrap()
             .clone()
@@ -83,6 +80,7 @@ fn process_entry(data: &json::object::Object) -> json::object::Object {
     out
 }
 
+#[inline]
 fn process_ctly(data: &json::JsonValue) -> json::JsonValue {
     let ts = time::now();
 
