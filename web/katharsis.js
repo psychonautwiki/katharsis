@@ -40,7 +40,7 @@ class Katharsis extends Events {
 		}
 	}
 
-	_load() {
+	_loadLoop() {
 		try {
 			const xhr = new XMLHttpRequest();
 
@@ -55,6 +55,8 @@ class Katharsis extends Events {
 
 				try {
 					this.emit('update', JSON.parse(xhr.responseText));
+
+					setTimeout((() => this._loadLoop()), 2000);
 				} catch (e) {
 					this._ingestError(e);
 				}
@@ -125,7 +127,7 @@ class Katharsis extends Events {
 	}
 
 	init() {
-		this._load();
+		this._loadLoop();
 	}
 }
 
