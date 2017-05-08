@@ -1,0 +1,24 @@
+.rx-katharsis-container .panel.radius {
+    border: 0;
+}
+
+.rx-katharsis-container .panel-header {
+    margin-bottom: 0;
+    padding: 0.5em;
+    margin: 0;
+    line-height: 1;
+    font-size: 20px !important;
+    border: 0;
+    text-align: center;
+}
+
+.rx-katharsis-container .panel-header .value-item {
+    font-weight: 700;
+    display: block;
+    font-size: 28px;
+}
+
+.rx-katharsis-container .panel-header .value-label {
+    display: block;
+    font-size: 15px;
+}
