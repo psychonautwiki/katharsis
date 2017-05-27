@@ -30,6 +30,12 @@ class Katharsis extends Events {
 
 		this._container = document.getElementsByClassName('rx-katharsis-container')[0];
 
+		this._dashboard = document.createElement('span');
+		this._stackdriver = document.createElement('span');
+
+		this._container.appendChild(this._dashboard);
+		this._container.appendChild(this._stackdriver);
+
 		this.on('update', data => this._render(data));
 	}
 
@@ -119,18 +125,32 @@ class Katharsis extends Events {
 
 		const panelContainer = this._buildItemPanel(set);
 
-		while (this._container['firstChild']) {
-			this._container['removeChild'](this._container['firstChild']);
+		while (this._dashboard['firstChild']) {
+			this._dashboard['removeChild'](this._dashboard['firstChild']);
 		}
 
-		this._container.appendChild(panelContainer);
+		this._dashboard.appendChild(panelContainer);
+	}
+
+	_renderDashboard() {
+		const frame = document.createElement('iframe');
+
+		frame.src = 'https://public.google.stackdriver.com/public/chart/qxc0ou9lkEvcRVl4?drawMode=color&showLegend=true&theme=light';
+		frame.height = 400;
+		frame.scrolling = false;
+		frame.seamless = 'seamless';
+
+		this._stackdriver.appendChild(frame);
 	}
 
 	init() {
 		this._loadLoop();
+		this._renderDashboard();
 	}
 }
 
-let katharsis = new Katharsis();
+if (document.getElementsByClassName('rx-katharsis-container').length > 0) {
+	let katharsis = new Katharsis();
 
-katharsis.init();
+	katharsis.init();
+}
