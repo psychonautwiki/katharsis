@@ -22,3 +22,9 @@
     display: block;
     font-size: 15px;
 }
+
+.rx-katharsis-container iframe {
+    width: 100%;
+    border: none;
+    margin: 10px;
+}
