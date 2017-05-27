@@ -133,14 +133,22 @@ class Katharsis extends Events {
 	}
 
 	_renderDashboard() {
-		const frame = document.createElement('iframe');
+		const stats_frame = document.createElement('iframe');
 
-		frame.src = 'https://public.google.stackdriver.com/public/chart/qxc0ou9lkEvcRVl4?drawMode=color&showLegend=true&theme=light';
-		frame.height = 400;
-		frame.scrolling = false;
-		frame.seamless = 'seamless';
+		stats_frame.src = 'https://public.google.stackdriver.com/public/chart/qxc0ou9lkEvcRVl4?drawMode=stats&showLegend=false&theme=light';
+		stats_frame.height = 400;
+		stats_frame.scrolling = false;
+		stats_frame.seamless = 'seamless';
 
-		this._stackdriver.appendChild(frame);
+		const overview_frame = document.createElement('iframe');
+
+		overview_frame.src = 'https://public.google.stackdriver.com/public/chart/qxc0ou9lkEvcRVl4?drawMode=color&showLegend=true&theme=light';
+		overview_frame.height = 400;
+		overview_frame.scrolling = false;
+		overview_frame.seamless = 'seamless';
+
+		this._stackdriver.appendChild(stats_frame);
+		this._stackdriver.appendChild(overview_frame);
 	}
 
 	init() {
