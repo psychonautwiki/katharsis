@@ -3,8 +3,6 @@
 
 extern crate rocket;
 
-#[cfg(test)] mod tests;
-
 extern crate serde_json;
 // #[macro_use]
 // extern crate serde_derive;
@@ -136,8 +134,6 @@ fn process_ctly(data: &json::JsonValue) -> json::JsonValue {
 }
 
 fn main() {
-    let mut pool = Pool::new(2);
-
     let api_token = match std::env::var("API_TOKEN") {
         Ok(token) => token,
         _ => {
@@ -151,20 +147,40 @@ fn main() {
         api_token
     );
 
-    pool.scoped(move |scoped| {
-        let data: Option<String> = None;
+    let data: Option<String> = None;
 
-        // mut
-        let root_store = Arc::new(Mutex::new(data));
+    // mut
+    let root_store = Arc::new(Mutex::new(data));
 
-        let store = root_store.clone();
+    /* rocket */
 
+    let mut pool_serve = Pool::new(1);
+
+    let store = root_store.clone();
+
+    pool_serve.scoped(move |scoped| {
         scoped.execute(move || {
-            let ssl = NativeTlsClient::new().unwrap();
-            let connector = HttpsConnector::new(ssl);
-            let client = Client::with_connector(connector);
+           rocket::ignite()
+            .mount("/", routes![index])
+            .manage(Store(store))
+            .launch();
+        });
+    });
 
-            loop {
+    /* crawler pool */
+
+    let mut pool_crawl = Pool::new(1);
+
+    pool_crawl.scoped(move |scoped| {
+        loop {
+            let endpoint_url = endpoint_url.clone();
+            let store = root_store.clone();
+
+            scoped.execute(move || {
+                let ssl = NativeTlsClient::new().unwrap();
+                let connector = HttpsConnector::new(ssl);
+                let client = Client::with_connector(connector);
+
                 let mut res = client.get(&endpoint_url).send().expect("Couldn't send request.");
 
                 let mut buf = String::new();
@@ -174,17 +190,10 @@ fn main() {
 
                 *store.lock().unwrap() = Some(process_ctly(&data).dump());
 
-                thread::sleep(Duration::from_millis(5000));
-            }
-        });
+                thread::sleep(Duration::from_millis(10));
+            });
 
-        let store = root_store.clone();
-
-        scoped.execute(move || {
-           rocket::ignite()
-            .mount("/", routes![index])
-            .manage(Store(store))
-            .launch();
-        });
+            scoped.join_all();
+        }
     });
 }
