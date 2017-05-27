@@ -22,9 +22,6 @@ use hyper::Client;
 use hyper::net::HttpsConnector;
 use hyper_native_tls::NativeTlsClient;
 
-extern crate scoped_threadpool;
-use scoped_threadpool::Pool;
-
 extern crate json;
 
 extern crate time;
@@ -154,46 +151,36 @@ fn main() {
 
     /* rocket */
 
-    let mut pool_serve = Pool::new(1);
-
     let store = root_store.clone();
 
-    pool_serve.scoped(move |scoped| {
-        scoped.execute(move || {
-           rocket::ignite()
-            .mount("/", routes![index])
-            .manage(Store(store))
-            .launch();
-        });
+    thread::spawn(move || {
+       rocket::ignite()
+        .mount("/", routes![index])
+        .manage(Store(store))
+        .launch();
     });
 
-    /* crawler pool */
+    /* crawler */
 
-    let mut pool_crawl = Pool::new(1);
+    loop {
+        let endpoint_url = endpoint_url.clone();
+        let store = root_store.clone();
 
-    pool_crawl.scoped(move |scoped| {
-        loop {
-            let endpoint_url = endpoint_url.clone();
-            let store = root_store.clone();
+        let _ = thread::spawn(move || {
+            let ssl = NativeTlsClient::new().unwrap();
+            let connector = HttpsConnector::new(ssl);
+            let client = Client::with_connector(connector);
 
-            scoped.execute(move || {
-                let ssl = NativeTlsClient::new().unwrap();
-                let connector = HttpsConnector::new(ssl);
-                let client = Client::with_connector(connector);
+            let mut res = client.get(&endpoint_url).send().expect("Couldn't send request.");
 
-                let mut res = client.get(&endpoint_url).send().expect("Couldn't send request.");
+            let mut buf = String::new();
+            res.read_to_string(&mut buf).expect("Couldn't read response.");
 
-                let mut buf = String::new();
-                res.read_to_string(&mut buf).expect("Couldn't read response.");
+            let data = json::parse(&buf).unwrap_or(json::JsonValue::new_object());
 
-                let data = json::parse(&buf).unwrap_or(json::JsonValue::new_object());
+            *store.lock().unwrap() = Some(process_ctly(&data).dump());
 
-                *store.lock().unwrap() = Some(process_ctly(&data).dump());
-
-                thread::sleep(Duration::from_millis(10));
-            });
-
-            scoped.join_all();
-        }
-    });
+            thread::sleep(Duration::from_millis(2000));
+        }).join();
+    }
 }
