@@ -33,11 +33,25 @@ struct Store(Arc<Mutex<Option<String>>>);
 
 #[get("/")]
 fn index(store: State<Store>) -> rocket::response::content::JSON<String> {
-    rocket::response::content::JSON(
-        store.inner().0
-            .lock().unwrap()
+    let shared_data = {
+        store
+            .inner().0
+            .lock()
+            .unwrap()
             .clone()
-            .unwrap_or("{}".to_string())
+    };
+
+    let data: String = match shared_data {
+        Some(data) => data,
+        None => {
+            println!("Serve error: Using fallback string for None shared data");
+
+            "{}".to_string()
+        }
+    };
+
+    rocket::response::content::JSON(
+        data
     )
 }
 
@@ -171,12 +185,17 @@ fn main() {
             let connector = HttpsConnector::new(ssl);
             let client = Client::with_connector(connector);
 
-            let mut res = client.get(&endpoint_url).send().expect("Couldn't send request.");
+            let mut res = client.get(&endpoint_url).send().expect("Connection error: Couldn't send request.");
 
             let mut buf = String::new();
-            res.read_to_string(&mut buf).expect("Couldn't read response.");
+            res.read_to_string(&mut buf).expect("Connection error: Couldn't read response.");
 
-            let data = json::parse(&buf).unwrap_or(json::JsonValue::new_object());
+            let data: json::JsonValue = match json::parse(&buf) {
+                Ok(data) => data,
+                Err(err) => {
+                    panic!("Parse error: {:?}", err);
+                }
+            };
 
             *store.lock().unwrap() = Some(process_ctly(&data).dump());
 
