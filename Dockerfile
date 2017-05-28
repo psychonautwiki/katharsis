@@ -1,6 +1,6 @@
 FROM kenansulayman/rust-nightly:latest
 
-ADD . /my-source
+COPY . /my-source
 
 RUN cd /my-source && cargo build -v --release
 
