@@ -35,7 +35,7 @@ use iso_country::Country;
 struct Store(Arc<Mutex<Option<String>>>);
 
 #[get("/")]
-fn index(store: State<Store>) -> rocket::response::content::JSON<String> {
+fn index(store: State<Store>) -> rocket::response::content::Json<String> {
     let shared_data = {
         store
             .inner().0
@@ -53,7 +53,7 @@ fn index(store: State<Store>) -> rocket::response::content::JSON<String> {
         }
     };
 
-    rocket::response::content::JSON(
+    rocket::response::content::Json(
         data
     )
 }
