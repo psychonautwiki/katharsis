@@ -4,7 +4,6 @@ use lazy_static;
 
 use std::collections::HashMap;
 
-#[no_warning]
 lazy_static! {
     static ref TIMEZONES: HashMap<&'static str, i64> = {
         let mut tz = HashMap::new();
