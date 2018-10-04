@@ -1,0 +1,10 @@
+{
+    "rust.mode": "rls",
+    "rust.rustup": {
+        "nightlyToolchain": "nightly-x86_64-apple-darwin",
+        "toolchain": "nightly-x86_64-apple-darwin"
+    },
+    "rust.rls": {
+        "useRustfmt": true
+    }
+}
